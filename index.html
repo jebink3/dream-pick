@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<title>Dream Pick</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(135deg,#eef2ff,#f8fafc);
+    color:#111827;
+}
+
+.container{
+    width:100%;
+    max-width:500px;
+    margin:auto;
+    padding:18px;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:18px;
+}
+
+.logo{
+    font-size:32px;
+    font-weight:800;
+    color:#4f46e5;
+}
+
+.subtitle{
+    color:#6b7280;
+    margin-top:5px;
+}
+
+.card{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+h2,h3{
+    margin-top:0;
+}
+
+input,
+select{
+    width:100%;
+    padding:14px;
+    border:1px solid #d1d5db;
+    border-radius:12px;
+    font-size:16px;
+    margin-top:8px;
+    margin-bottom:12px;
+    outline:none;
+}
+
+input:focus,
+select:focus{
+    border-color:#4f46e5;
+}
+
+button{
+    width:100%;
+    border:0;
+    padding:14px;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:8px;
+}
+
+.primary{
+    background:#4f46e5;
+    color:white;
+}
+
+.primary:active{
+    transform:scale(.98);
+}
+
+.admin-btn{
+    background:#111827;
+    color:white;
+}
+
+.danger{
+    background:#dc2626;
+    color:white;
+}
+
+.secondary{
+    background:#e5e7eb;
+    color:#111827;
+}
+
+.whatsapp{
+    background:#16a34a;
+    color:white;
+}
+
+.hidden{
+    display:none !important;
+}
+
+.message{
+    text-align:center;
+    padding:12px;
+    margin-bottom:15px;
+    border-radius:10px;
+    background:#fee2e2;
+    color:#991b1b;
+    display:none;
+}
+
+.success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.info-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.info-box{
+    background:#f3f4f6;
+    padding:12px;
+    border-radius:12px;
+}
+
+.info-label{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.info-value{
+    font-weight:bold;
+    margin-top:5px;
+}
+
+.result-box{
+    text-align:center;
+    padding:25px 15px;
+    border-radius:18px;
+    background:linear-gradient(135deg,#ede9fe,#dbeafe);
+}
+
+.result-label{
+    font-size:15px;
+    color:#6b7280;
+}
+
+.result-number{
+    font-size:70px;
+    font-weight:900;
+    color:#4f46e5;
+    line-height:1;
+    margin:12px 0;
+}
+
+.result-status{
+    font-weight:bold;
+}
+
+.number-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.number-btn{
+    width:auto;
+    margin:0;
+    padding:15px 5px;
+    background:#f3f4f6;
+    color:#111827;
+    font-size:22px;
+    border:2px solid transparent;
+}
+
+.number-btn.selected{
+    background:#4f46e5;
+    color:white;
+    border-color:#312e81;
+}
+
+.price-box{
+    background:#eef2ff;
+    border-radius:12px;
+    padding:15px;
+    margin-top:10px;
+    text-align:center;
+}
+
+.price-value{
+    font-size:25px;
+    font-weight:bold;
+    color:#4f46e5;
+}
+
+.pick-display{
+    background:#f9fafb;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:15px;
+    margin-top:10px;
+}
+
+.pick-row{
+    display:flex;
+    justify-content:space-between;
+    padding:7px 0;
+}
+
+.admin-player{
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+    background:#fafafa;
+}
+
+.admin-player strong{
+    color:#111827;
+}
+
+
+.admin-player-select{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+}
+
+.admin-player-check{
+    width:22px;
+    height:22px;
+    margin:2px 0 0 0;
+    flex:0 0 auto;
+    accent-color:#4f46e5;
+}
+
+.admin-player-content{
+    flex:1;
+    min-width:0;
+}
+
+.separate-bar{
+    position:sticky;
+    bottom:10px;
+    z-index:20;
+    margin-top:12px;
+    padding:10px;
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    box-shadow:0 8px 25px rgba(0,0,0,.12);
+}
+
+.separate-count{
+    text-align:center;
+    font-size:13px;
+    color:#6b7280;
+    margin-bottom:4px;
+}
+
+.admin-room{
+    border:1px solid #c7d2fe;
+    border-radius:14px;
+    padding:14px;
+    margin-top:10px;
+    background:#eef2ff;
+}
+
+.admin-room-member{
+    background:white;
+    border-radius:9px;
+    padding:8px 10px;
+    margin-top:7px;
+    font-size:14px;
+}
+
+.status-open{
+    color:#15803d;
+    font-weight:bold;
+}
+
+.status-closed{
+    color:#dc2626;
+    font-weight:bold;
+}
+
+.confetti{
+    position:fixed;
+    top:-20px;
+    width:10px;
+    height:16px;
+    animation:fall 2.5s linear forwards;
+    z-index:9999;
+}
+
+@keyframes fall{
+    0%{
+        transform:translateY(-20px) rotate(0deg);
+        opacity:1;
+    }
+
+    100%{
+        transform:translateY(110vh) rotate(720deg);
+        opacity:0;
+    }
+}
+
+.small{
+    font-size:13px;
+    color:#6b7280;
+    line-height:1.5;
+}
+
+.center{
+    text-align:center;
+}
+
+hr{
+    border:0;
+    border-top:1px solid #e5e7eb;
+    margin:18px 0;
+}
+
+
+
+/* =========================================================
+   ROOM NAME MODAL
+========================================================= */
+.room-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:9999;
+}
+.room-modal{
+    width:100%;
+    max-width:420px;
+    background:#fff;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.room-modal h3{
+    margin:0 0 8px;
+}
+.room-modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+}
+.room-modal-actions button{
+    margin-top:0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="logo">🎯 Dream Pick</div>
+        <div class="subtitle">കുടുംബ വിനോദ ഗെയിം</div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <!-- LOGIN -->
+    <div id="loginScreen">
+
+        <div class="card">
+
+            <h2>👋 സ്വാഗതം</h2>
+
+            <p class="small">
+                തുടരാൻ നിങ്ങളുടെ പേരും മൊബൈൽ നമ്പറും നൽകുക.
+            </p>
+
+            <label>പേര്</label>
+
+            <input
+                id="name"
+                type="text"
+                placeholder="നിങ്ങളുടെ പേര്"
+                autocomplete="name"
+            >
+
+            <label>മൊബൈൽ നമ്പർ</label>
+
+            <input
+                id="phone"
+                type="tel"
+                maxlength="10"
+                inputmode="numeric"
+                pattern="[6-9][0-9]{9}"
+                placeholder="10 അക്ക മൊബൈൽ നമ്പർ"
+                autocomplete="tel"
+            >
+
+            <button class="primary" onclick="playerLogin()">
+                Login
+            </button>
+
+            <button class="admin-btn" onclick="showAdminLogin()">
+                🔐 Admin Login
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div id="adminLoginScreen" class="hidden">
+
+        <div class="card">
+
+            <h2>🔐 Admin Login</h2>
+
+            <label>Email</label>
+
+            <input
+                id="adminEmail"
+                type="email"
+                placeholder="Admin email"
+            >
+
+            <label>Password</label>
+
+            <input
+                id="adminPassword"
+                type="password"
+                placeholder="Password"
+            >
+
+            <button class="primary" onclick="adminLogin()">
+                Login
+            </button>
+
+            <button class="secondary" onclick="backToLogin()">
+                ← Back
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- PLAYER HOME -->
+    <div id="playerHome" class="hidden">
+
+        <div class="card">
+
+            <h2>
+                സ്വാഗതം,
+                <span id="playerName"></span> 👋
+            </h2>
+
+            <div class="info-grid">
+
+                <div class="info-box">
+                    <div class="info-label">Lottery</div>
+                    <div id="lotteryName" class="info-value">-</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Date</div>
+                    <div id="drawDate" class="info-value">-</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Draw Time</div>
+                    <div id="drawTime" class="info-value">-</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Pick Status</div>
+                    <div id="pickStatus" class="info-value">-</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RESULT -->
+        <div class="card">
+
+            <div class="result-box">
+
+                <div class="result-label">
+                    🏆 Winning Number
+                </div>
+
+                <div id="resultNumber" class="result-number">
+                    -
+                </div>
+
+                <div id="resultStatus" class="result-status">
+                    Result not published
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MY PICK -->
+        <div class="card">
+
+            <h3>🎯 എന്റെ Pick</h3>
+
+            <div id="myPick" class="pick-display">
+
+                <div class="pick-row">
+                    <span>Selected Number</span>
+                    <strong id="myNumber">-</strong>
+                </div>
+
+                <div class="pick-row">
+                    <span>Buy</span>
+                    <strong id="myBuy">-</strong>
+                </div>
+
+                <div class="pick-row">
+                    <span>Price</span>
+                    <strong id="myPrice">-</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PICK AREA -->
+        <div id="pickArea" class="card">
+
+            <h3>🔢 ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക</h3>
+
+            <p class="small">
+                0 മുതൽ 9 വരെ ഒരു നമ്പർ മാത്രം തിരഞ്ഞെടുക്കുക.
+            </p>
+
+            <div class="number-grid">
+
+                <button class="number-btn" onclick="selectNumber(0)">0</button>
+                <button class="number-btn" onclick="selectNumber(1)">1</button>
+                <button class="number-btn" onclick="selectNumber(2)">2</button>
+                <button class="number-btn" onclick="selectNumber(3)">3</button>
+                <button class="number-btn" onclick="selectNumber(4)">4</button>
+                <button class="number-btn" onclick="selectNumber(5)">5</button>
+                <button class="number-btn" onclick="selectNumber(6)">6</button>
+                <button class="number-btn" onclick="selectNumber(7)">7</button>
+                <button class="number-btn" onclick="selectNumber(8)">8</button>
+                <button class="number-btn" onclick="selectNumber(9)">9</button>
+
+            </div>
+
+            <h3 style="margin-top:25px;">
+                💰 Buy Amount
+            </h3>
+
+            <select id="buyAmount" onchange="calculatePrice()">
+
+                <option value="">Buy തിരഞ്ഞെടുക്കുക</option>
+
+                <option value="10">₹10</option>
+                <option value="20">₹20</option>
+                <option value="50">₹50</option>
+                <option value="100">₹100</option>
+                <option value="200">₹200</option>
+                <option value="300">₹300</option>
+                <option value="500">₹500</option>
+                <option value="750">₹750</option>
+                <option value="1000">₹1000</option>
+
+            </select>
+
+            <div class="price-box">
+
+                <div>Price</div>
+
+                <div id="price" class="price-value">
+                    ₹0
+                </div>
+
+            </div>
+
+            <button class="primary" onclick="submitPick()">
+                ✅ Submit Pick
+            </button>
+
+        </div>
+
+        <!-- HELP -->
+        <div class="card center">
+
+            <h3>❓ സഹായം</h3>
+
+            <p class="small">
+                എന്തെങ്കിലും പ്രശ്നമുണ്ടെങ്കിൽ Admin-നെ ബന്ധപ്പെടുക.
+            </p>
+
+            <a
+                class="whatsapp"
+                href="https://wa.me/917593011528?text=Hello%20Admin%2C%20Dream%20Pick%20%E0%B4%B8%E0%B4%82%E0%B4%AC%E0%B4%A8%E0%B5%8D%E0%B4%A7%E0%B4%BF%E0%B4%9A%E0%B5%8D%E0%B4%9A%E0%B5%8D%20%E0%B4%B8%E0%B4%B9%E0%B4%BE%E0%B4%AF%E0%B4%82%20%E0%B4%B5%E0%B5%87%E0%B4%A3%E0%B4%82."
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display:block;text-align:center;text-decoration:none;"
+            >
+                💬 WhatsApp Admin
+            </a>
+
+        </div>
+
+        <button class="secondary" onclick="playerLogout()">
+            Logout
+        </button>
+
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard" class="hidden">
+
+        <div class="card">
+
+            <h2>🔐 Admin Dashboard</h2>
+
+            <p>
+                Current Game നിയന്ത്രിക്കുക.
+            </p>
+
+        </div>
+
+        <!-- LOTTERY DETAILS -->
+        <div class="card">
+
+            <h3>🎟️ Lottery Details</h3>
+
+            <p class="small">
+                പുതിയ Game Save ചെയ്യുമ്പോൾ പഴയ Game, Players, Admin Separate Rooms എന്നിവ delete ചെയ്യും.
+                അതിനുശേഷം പുതിയ Game-ന്റെ Result Admin വീണ്ടും Publish ചെയ്യണം.
+            </p>
+
+            <label>Lottery Name</label>
+
+            <input
+                id="adminLotteryName"
+                type="text"
+                placeholder="ഉദാ: Dhanalakshmi Draw 543"
+            >
+
+            <label>Draw Date</label>
+
+            <input
+                id="adminDrawDate"
+                type="date"
+            >
+
+            <label>Draw Time</label>
+
+            <input
+                id="adminDrawTime"
+                type="time"
+            >
+
+            <button class="primary" onclick="saveLotteryDetails()">
+                💾 Save Lottery Details
+            </button>
+
+        </div>
+
+        <!-- RESULT -->
+        <div class="card">
+
+            <h3>🏆 Publish Result</h3>
+
+            <p class="small">
+                കേരള ലോട്ടറി ഫസ്റ്റ് പ്രൈസിന്റെ
+                അവസാനത്തെ ഒരു അക്ക നമ്പർ മാത്രം നൽകുക.
+            </p>
+
+            <input
+                id="winningNumber"
+                type="number"
+                min="0"
+                max="9"
+                step="1"
+                inputmode="numeric"
+                placeholder="0 - 9"
+            >
+
+            <button class="primary" onclick="publishResult()">
+                📢 Publish Result
+            </button>
+
+            <button class="danger" onclick="resetResult()">
+                🧹 Reset Current Result
+            </button>
+
+            <p
+                id="adminResultStatus"
+                class="small center"
+                style="margin-top:12px;">
+            </p>
+
+        </div>
+
+        <!-- PLAYERS -->
+        <div class="card">
+
+            <h3>👥 Current Game Players</h3>
+
+            <p class="small">
+                Admin-ന് മാത്രം Players select ചെയ്ത് separate group-ലേക്ക് മാറ്റാം.
+                Players-ന് ഈ group/room കാണാൻ കഴിയില്ല.
+            </p>
+
+            <div id="playerList">
+                Loading...
+            </div>
+
+            <div class="separate-bar">
+                <div id="selectedPlayerCount" class="separate-count">
+                    0 Players selected
+                </div>
+                <button class="primary" onclick="separateSelectedPlayers()">
+                    ➡️ Separate Selected
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ADMIN ONLY SEPARATE ROOMS -->
+        <div class="card">
+
+            <h3>🔒 Admin Only Separate Groups</h3>
+
+            <p class="small">
+                ഇവിടെ കാണുന്ന groups Admin-ന് മാത്രം. Players-ന് ഈ വിവരങ്ങൾ കാണിക്കില്ല.
+            </p>
+
+            <div id="adminRoomsList">
+                No separate groups yet.
+            </div>
+
+        </div>
+
+        <button class="secondary" onclick="adminLogout()">
+            Logout
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- PRIVATE ROOM NAME MODAL -->
+<div id="roomNameModal" class="room-modal-overlay hidden">
+    <div class="room-modal">
+        <h3>🔒 Private Room</h3>
+        <p class="small">Selected players-ന് Room name നൽകുക.</p>
+        <input id="roomNameInput" type="text" placeholder="ഉദാ: Family Group">
+        <div class="room-modal-actions">
+            <button class="secondary" onclick="closeRoomNameModal()">Cancel</button>
+            <button class="primary" onclick="confirmSeparateSelectedPlayers()">✅ OK - Separate</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+/* =========================================================
+   FIREBASE CONFIG
+   Correct API key from your Firebase Web App config
+========================================================= */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyDI_Vde8JTdWYNhJGx3nxNmJqsqFmDsR1I",
+
+    authDomain:
+        "dream-pick.firebaseapp.com",
+
+    projectId:
+        "dream-pick",
+
+    storageBucket:
+        "dream-pick.firebasestorage.app",
+
+    messagingSenderId:
+        "795904717810",
+
+    appId:
+        "1:795904717810:web:d4e3ad84a7f6426dadb16b"
+
+};
+
+
+/* =========================================================
+   INITIALIZE FIREBASE
+========================================================= */
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+
+const db = firebase.firestore();
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentUser = null;
+
+let selectedNumber = null;
+
+let unsubscribeGame = null;
+
+let unsubscribePlayers = null;
+
+let lastPublishedResultAt = null;
+
+let currentPlayerGameDate = null;
+let currentAdminGameDate = null;
+
+const ADMIN_EMAIL =
+    "jecobjebin@gmail.com";
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showMessage(message, success=false){
+
+    const box =
+        document.getElementById("message");
+
+    box.textContent = message;
+
+    box.style.display = "block";
+
+    box.className =
+        success
+        ? "message success"
+        : "message";
+
+    setTimeout(() => {
+
+        box.style.display = "none";
+
+    }, 4000);
+
+}
+
+
+/* =========================================================
+   INDIA DATE / TIME
+========================================================= */
+
+function getIndiaDate(){
+
+    const now = new Date();
+
+    return new Intl.DateTimeFormat(
+        "en-CA",
+        {
+            timeZone:"Asia/Kolkata",
+            year:"numeric",
+            month:"2-digit",
+            day:"2-digit"
+        }
+    ).format(now);
+
+}
+
+
+function getIndiaTime(){
+
+    const now = new Date();
+
+    return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+            timeZone:"Asia/Kolkata",
+            hour:"2-digit",
+            minute:"2-digit",
+            hour12:false
+        }
+    ).format(now);
+
+}
+
+
+/* =========================================================
+   CHECK 2 PM CUTOFF
+========================================================= */
+
+function isPickOpenForDate(drawDate){
+
+    if(!drawDate){
+        return false;
+    }
+
+    const today = getIndiaDate();
+
+    if(drawDate > today){
+        return true;
+    }
+
+    if(drawDate < today){
+        return false;
+    }
+
+    const time = getIndiaTime();
+    const parts = time.split(":");
+    const hour = Number(parts[0]);
+    const minute = Number(parts[1]);
+
+    return (hour * 60 + minute) < (14 * 60);
+}
+
+function isPickOpen(){
+    return isPickOpenForDate(currentPlayerGameDate || getIndiaDate());
+}
+
+/* Find the earliest game whose draw date is today or later.
+   We deliberately do this in JavaScript instead of a compound
+   Firestore query, so no extra index is required. */
+async function getNextGame(){
+
+    const today = getIndiaDate();
+    const snapshot = await db.collection("games").get();
+
+    const games = snapshot.docs
+        .map(doc => {
+            const data = doc.data() || {};
+            return {
+                ref: doc.ref,
+                data: data,
+                date: data.drawDate || doc.id
+            };
+        })
+        .filter(item => item.date >= today)
+        .sort((a,b) => a.date.localeCompare(b.date));
+
+    return games.length ? games[0] : null;
+}
+
+
+
+/* =========================================================
+   SHOW / HIDE
+========================================================= */
+
+function hideAllScreens(){
+
+    document
+        .getElementById("loginScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("adminLoginScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("playerHome")
+        .classList.add("hidden");
+
+    document
+        .getElementById("adminDashboard")
+        .classList.add("hidden");
+
+}
+
+
+/* =========================================================
+   PLAYER LOGIN
+========================================================= */
+
+async function playerLogin(){
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    if(!name){
+        showMessage("ദയവായി പേര് നൽകുക.");
+        return;
+    }
+
+    if(!/^[6-9][0-9]{9}$/.test(phone)){
+        showMessage("ശരിയായ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക.");
+        return;
+    }
+
+    try{
+        await firebaseLogin();
+
+        const game = await getNextGame();
+
+        if(!game){
+            showMessage("ഇപ്പോൾ ഒരു Game available അല്ല. Admin Game create ചെയ്യണം.");
+            return;
+        }
+
+        currentPlayerGameDate = game.date;
+
+        await game.ref.collection("players").doc(currentUser.uid).set({
+            name: name,
+            phone: phone,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        localStorage.setItem("dreamPickName", name);
+        localStorage.setItem("dreamPickPhone", phone);
+
+        hideAllScreens();
+        document.getElementById("playerHome").classList.remove("hidden");
+        document.getElementById("playerName").textContent = name;
+
+        loadPlayerGame();
+
+    }catch(error){
+        console.error("PLAYER LOGIN ERROR:", error);
+        showMessage("Login ചെയ്യാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക.");
+    }
+}
+
+
+
+/* =========================================================
+   FIREBASE ANONYMOUS LOGIN
+========================================================= */
+
+async function firebaseLogin(){
+
+    if(auth.currentUser){
+
+        currentUser =
+            auth.currentUser;
+
+        return currentUser;
+    }
+
+
+    const result =
+        await auth.signInAnonymously();
+
+    currentUser =
+        result.user;
+
+    return currentUser;
+
+}
+
+
+/* =========================================================
+   LOAD PLAYER GAME
+========================================================= */
+
+async function loadPlayerGame(){
+
+    if(unsubscribeGame){
+        unsubscribeGame();
+        unsubscribeGame = null;
+    }
+
+    try{
+        const game = await getNextGame();
+
+        if(!game){
+            currentPlayerGameDate = null;
+            document.getElementById("lotteryName").textContent = "-";
+            document.getElementById("drawDate").textContent = "-";
+            document.getElementById("drawTime").textContent = "-";
+            document.getElementById("pickStatus").textContent = "No Game";
+            document.getElementById("pickStatus").className = "info-value status-closed";
+            document.getElementById("resultNumber").textContent = "-";
+            document.getElementById("resultStatus").textContent = "Game not available";
+            document.getElementById("pickArea").classList.add("hidden");
+            await loadMyPick();
+            return;
+        }
+
+        currentPlayerGameDate = game.date;
+        const gameRef = game.ref;
+
+        unsubscribeGame = gameRef.onSnapshot(async (doc) => {
+
+            const data = doc.exists ? doc.data() : {};
+            const drawDate = data.drawDate || currentPlayerGameDate;
+            currentPlayerGameDate = drawDate;
+
+            document.getElementById("lotteryName").textContent = data.lotteryName || "-";
+            document.getElementById("drawDate").textContent = drawDate || "-";
+            document.getElementById("drawTime").textContent = data.drawTime || "-";
+
+            const resultNumber = document.getElementById("resultNumber");
+            const resultStatus = document.getElementById("resultStatus");
+            let showResult = data.resultPublished === true && data.result !== undefined && data.result !== null;
+
+            if(showResult && data.gameStartedAt && data.resultPublishedAt){
+                const started = data.gameStartedAt.toMillis ? data.gameStartedAt.toMillis() : 0;
+                const published = data.resultPublishedAt.toMillis ? data.resultPublishedAt.toMillis() : 0;
+                if(started && published && published < started){
+                    showResult = false;
+                }
+            }
+
+            if(showResult){
+                resultNumber.textContent = data.result;
+                resultStatus.textContent = "🎉 Result Published";
+                resultStatus.style.color = "#15803d";
+
+                let resultTime = "";
+                if(data.resultPublishedAt){
+                    resultTime = data.resultPublishedAt.toMillis ? String(data.resultPublishedAt.toMillis()) : "";
+                }
+                if(resultTime && resultTime !== lastPublishedResultAt){
+                    lastPublishedResultAt = resultTime;
+                    launchConfetti();
+                }
+            }else{
+                resultNumber.textContent = "-";
+                resultStatus.textContent = "Result not published";
+                resultStatus.style.color = "#6b7280";
+            }
+
+            const open = isPickOpenForDate(drawDate);
+            const status = document.getElementById("pickStatus");
+
+            if(open){
+                status.textContent = "Open";
+                status.className = "info-value status-open";
+                document.getElementById("pickArea").classList.remove("hidden");
+            }else{
+                status.textContent = "Closed";
+                status.className = "info-value status-closed";
+                document.getElementById("pickArea").classList.add("hidden");
+            }
+
+            await loadMyPick();
+
+        }, error => {
+            console.error("GAME LISTENER ERROR:", error);
+            showMessage("Game വിവരങ്ങൾ load ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+        });
+
+    }catch(error){
+        console.error("LOAD PLAYER GAME ERROR:", error);
+        showMessage("Game വിവരങ്ങൾ load ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+    }
+}
+
+
+
+/* =========================================================
+   LOAD MY PICK
+========================================================= */
+
+async function loadMyPick(){
+
+    if(!currentUser || !currentPlayerGameDate){
+        document.getElementById("myNumber").textContent = "-";
+        document.getElementById("myBuy").textContent = "-";
+        document.getElementById("myPrice").textContent = "-";
+        return;
+    }
+
+    const ref = db.collection("games")
+        .doc(currentPlayerGameDate)
+        .collection("players")
+        .doc(currentUser.uid);
+
+    try{
+        const doc = await ref.get();
+
+        if(!doc.exists){
+            document.getElementById("myNumber").textContent = "-";
+            document.getElementById("myBuy").textContent = "-";
+            document.getElementById("myPrice").textContent = "-";
+            return;
+        }
+
+        const data = doc.data();
+
+        if(data.number !== undefined && data.number !== null){
+            document.getElementById("myNumber").textContent = data.number;
+            document.getElementById("myBuy").textContent = "₹" + data.buy;
+            document.getElementById("myPrice").textContent = "₹" + data.price;
+            document.getElementById("pickArea").classList.add("hidden");
+        }else{
+            document.getElementById("myNumber").textContent = "-";
+            document.getElementById("myBuy").textContent = "-";
+            document.getElementById("myPrice").textContent = "-";
+        }
+
+    }catch(error){
+        console.error("MY PICK ERROR:", error);
+    }
+}
+
+
+
+/* =========================================================
+   SELECT NUMBER
+========================================================= */
+
+function selectNumber(number){
+
+    if(!isPickOpenForDate(currentPlayerGameDate)){
+
+        showMessage(
+            "2 മണിക്ക് ശേഷം Pick ചെയ്യാൻ കഴിയില്ല."
+        );
+
+        return;
+    }
+
+
+    selectedNumber =
+        number;
+
+
+    const buttons =
+        document.querySelectorAll(
+            ".number-btn"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.classList.remove(
+                "selected"
+            );
+
+        }
+    );
+
+
+    buttons[number]
+        .classList.add(
+            "selected"
+        );
+
+}
+
+
+/* =========================================================
+   CALCULATE PRICE
+========================================================= */
+
+function calculatePrice(){
+
+    const buy =
+        Number(
+            document
+            .getElementById("buyAmount")
+            .value
+        );
+
+
+    const price =
+        buy
+        ? buy * 2
+        : 0;
+
+
+    document
+        .getElementById("price")
+        .textContent =
+        "₹" + price;
+
+}
+
+
+/* =========================================================
+   SUBMIT PICK
+========================================================= */
+
+async function submitPick(){
+
+    if(!currentPlayerGameDate || !isPickOpenForDate(currentPlayerGameDate)){
+        showMessage("2 മണിക്ക് ശേഷം Pick ചെയ്യാൻ കഴിയില്ല.");
+        return;
+    }
+
+    if(selectedNumber === null){
+        showMessage("ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക.");
+        return;
+    }
+
+    const buy = Number(document.getElementById("buyAmount").value);
+
+    if(!buy){
+        showMessage("Buy Amount തിരഞ്ഞെടുക്കുക.");
+        return;
+    }
+
+    const price = buy * 2;
+
+    try{
+        await db.collection("games")
+            .doc(currentPlayerGameDate)
+            .collection("players")
+            .doc(currentUser.uid)
+            .set({
+                name: document.getElementById("playerName").textContent,
+                phone: localStorage.getItem("dreamPickPhone") || "",
+                number: selectedNumber,
+                buy: buy,
+                price: price,
+                participated: true,
+                submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge:true });
+
+        document.getElementById("myNumber").textContent = selectedNumber;
+        document.getElementById("myBuy").textContent = "₹" + buy;
+        document.getElementById("myPrice").textContent = "₹" + price;
+
+        showMessage("നിങ്ങളുടെ Pick വിജയകരമായി Save ചെയ്തു.", true);
+        document.getElementById("pickArea").classList.add("hidden");
+
+    }catch(error){
+        console.error("SUBMIT PICK ERROR:", error);
+        showMessage("Pick save ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+    }
+}
+
+
+
+/* =========================================================
+   PLAYER LOGOUT
+========================================================= */
+
+async function playerLogout(){
+
+    try{
+
+        if(unsubscribeGame){
+
+            unsubscribeGame();
+
+            unsubscribeGame =
+                null;
+
+        }
+
+
+        await auth.signOut();
+
+        currentUser =
+            null;
+
+        selectedNumber =
+            null;
+
+        currentPlayerGameDate = null;
+
+        lastPublishedResultAt =
+            null;
+
+
+        hideAllScreens();
+
+        document
+            .getElementById("loginScreen")
+            .classList.remove("hidden");
+
+    }
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+/* =========================================================
+   ADMIN LOGIN SCREEN
+========================================================= */
+
+function showAdminLogin(){
+
+    hideAllScreens();
+
+    document
+        .getElementById("adminLoginScreen")
+        .classList.remove("hidden");
+
+}
+
+
+function backToLogin(){
+
+    hideAllScreens();
+
+    document
+        .getElementById("loginScreen")
+        .classList.remove("hidden");
+
+}
+
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+async function adminLogin(){
+
+    const email =
+        document
+        .getElementById("adminEmail")
+        .value
+        .trim();
+
+    const password =
+        document
+        .getElementById("adminPassword")
+        .value;
+
+
+    if(!email || !password){
+
+        showMessage(
+            "Emailയും Passwordയും നൽകുക."
+        );
+
+        return;
+    }
+
+
+    if(email.toLowerCase() !==
+       ADMIN_EMAIL.toLowerCase()){
+
+        showMessage(
+            "Admin email ശരിയല്ല."
+        );
+
+        return;
+    }
+
+
+    try{
+
+        const result =
+            await auth.signInWithEmailAndPassword(
+                email,
+                password
+            );
+
+
+        currentUser =
+            result.user;
+
+
+        hideAllScreens();
+
+        document
+            .getElementById("adminDashboard")
+            .classList.remove("hidden");
+
+
+        loadAdminGame();
+
+    }
+    catch(error){
+
+        console.error(
+            "ADMIN LOGIN ERROR:",
+            error
+        );
+
+        showMessage(
+            "Admin Login failed. Email / Password പരിശോധിക്കുക."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD ADMIN GAME
+========================================================= */
+
+async function loadAdminGame(){
+
+    try{
+        const game = await getNextGame();
+
+        if(!game){
+            currentAdminGameDate = null;
+            document.getElementById("adminDrawDate").value = getIndiaDate();
+            document.getElementById("adminLotteryName").value = "";
+            document.getElementById("adminDrawTime").value = "";
+            document.getElementById("adminResultStatus").textContent = "Game ഇതുവരെ create ചെയ്തിട്ടില്ല.";
+            loadPlayers();
+            return;
+        }
+
+        currentAdminGameDate = game.date;
+        const data = game.data;
+
+        document.getElementById("adminLotteryName").value = data.lotteryName || "";
+        document.getElementById("adminDrawDate").value = data.drawDate || game.date;
+        document.getElementById("adminDrawTime").value = data.drawTime || "";
+
+        if(data.resultPublished === true && data.result !== undefined){
+            document.getElementById("adminResultStatus").textContent = "Current Result: " + data.result;
+            document.getElementById("winningNumber").value = data.result;
+        }else{
+            document.getElementById("adminResultStatus").textContent = "Result not published.";
+            document.getElementById("winningNumber").value = "";
+        }
+
+        loadPlayers();
+
+    }catch(error){
+        console.error("ADMIN GAME ERROR:", error);
+        showMessage("Admin Game വിവരങ്ങൾ load ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+    }
+}
+
+
+
+/* =========================================================
+   SAVE LOTTERY DETAILS
+   This starts/resets today's game so an old result
+   cannot carry over into the new game.
+========================================================= */
+
+async function deleteCollectionDocs(collectionRef){
+
+    const snapshot = await collectionRef.get();
+    let batch = db.batch();
+    let count = 0;
+
+    for(const doc of snapshot.docs){
+        batch.delete(doc.ref);
+        count++;
+
+        if(count === 400){
+            await batch.commit();
+            batch = db.batch();
+            count = 0;
+        }
+    }
+
+    if(count > 0){
+        await batch.commit();
+    }
+}
+
+async function deleteOldGame(gameDoc){
+
+    await deleteCollectionDocs(gameDoc.ref.collection("players"));
+
+    const roomsSnapshot = await gameDoc.ref.collection("adminRooms").get();
+
+    for(const roomDoc of roomsSnapshot.docs){
+        await deleteCollectionDocs(roomDoc.ref.collection("members"));
+        await roomDoc.ref.delete();
+    }
+
+    await gameDoc.ref.delete();
+}
+
+async function cleanupOldGames(){
+
+    const snapshot = await db.collection("games").get();
+
+    for(const gameDoc of snapshot.docs){
+        await deleteOldGame(gameDoc);
+    }
+}
+
+async function saveLotteryDetails(){
+
+    const lotteryName = document.getElementById("adminLotteryName").value.trim();
+    const drawDate = document.getElementById("adminDrawDate").value;
+    const drawTime = document.getElementById("adminDrawTime").value;
+
+    if(!lotteryName){
+        showMessage("Lottery Name നൽകുക.");
+        return;
+    }
+
+    if(!drawDate){
+        showMessage("Draw Date തിരഞ്ഞെടുക്കുക.");
+        return;
+    }
+
+    if(!drawTime){
+        showMessage("Draw Time നൽകുക.");
+        return;
+    }
+
+    const ok = confirm(
+        "പുതിയ Game create ചെയ്യുമ്പോൾ പഴയ Game, Players, Admin Separate Rooms എന്നിവ delete ചെയ്യും.\n\nതുടരട്ടേ?"
+    );
+
+    if(!ok){
+        return;
+    }
+
+    try{
+        await cleanupOldGames();
+
+        await db.collection("games").doc(drawDate).set({
+            lotteryName: lotteryName,
+            drawDate: drawDate,
+            drawTime: drawTime,
+            gameStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            result: firebase.firestore.FieldValue.delete(),
+            resultPublished: false,
+            resultPublishedAt: firebase.firestore.FieldValue.delete(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        currentAdminGameDate = drawDate;
+        document.getElementById("winningNumber").value = "";
+        document.getElementById("adminResultStatus").textContent = "New game started. Result not published.";
+
+        await loadAdminGame();
+
+        showMessage(
+            "പുതിയ Game Save ചെയ്തു. പഴയ Players + Separate Rooms delete ചെയ്തു.",
+            true
+        );
+
+    }catch(error){
+        console.error("SAVE LOTTERY ERROR:", error);
+        showMessage("Lottery Details save ചെയ്യാൻ കഴിഞ്ഞില്ല: " + (error.message || error.code || "Unknown error"));
+    }
+}
+
+
+
+/* =========================================================
+   PUBLISH RESULT
+========================================================= */
+
+async function publishResult(){
+
+    const value = document.getElementById("winningNumber").value.trim();
+
+    if(!/^[0-9]$/.test(value)){
+        showMessage("0 മുതൽ 9 വരെ ഒരു അക്ക നമ്പർ മാത്രം നൽകുക.");
+        return;
+    }
+
+    if(!currentAdminGameDate){
+        showMessage("ആദ്യം ഒരു Game create ചെയ്യുക.");
+        return;
+    }
+
+    const result = Number(value);
+
+    try{
+        await db.collection("games").doc(currentAdminGameDate).set({
+            result: result,
+            resultPublished: true,
+            resultPublishedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        document.getElementById("adminResultStatus").textContent = "Published Result: " + result;
+        showMessage("Result വിജയകരമായി Publish ചെയ്തു.", true);
+
+    }catch(error){
+        console.error("PUBLISH RESULT ERROR:", error);
+        showMessage("Result publish ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+    }
+}
+
+
+
+/* =========================================================
+   RESET RESULT
+========================================================= */
+
+async function resetResult(){
+
+    const ok = confirm("Current Game Result Reset ചെയ്യണോ?");
+
+    if(!ok || !currentAdminGameDate){
+        return;
+    }
+
+    try{
+        await db.collection("games").doc(currentAdminGameDate).set({
+            result: firebase.firestore.FieldValue.delete(),
+            resultPublished: false,
+            resultPublishedAt: firebase.firestore.FieldValue.delete(),
+            gameStartedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        document.getElementById("winningNumber").value = "";
+        document.getElementById("adminResultStatus").textContent = "Result Reset ചെയ്തു.";
+        showMessage("Current Game Result Reset ചെയ്തു.", true);
+
+    }catch(error){
+        console.error("RESET RESULT ERROR:", error);
+        showMessage("Result reset ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+    }
+}
+
+
+
+/* =========================================================
+   LOAD PLAYERS
+========================================================= */
+
+function loadPlayers(){
+
+    if(unsubscribePlayers){
+        unsubscribePlayers();
+        unsubscribePlayers = null;
+    }
+
+    const container = document.getElementById("playerList");
+
+    if(!currentAdminGameDate){
+        container.innerHTML = "<p class='small'>Game create ചെയ്തിട്ടില്ല.</p>";
+        updateSelectedPlayerCount();
+        document.getElementById("adminRoomsList").innerHTML = "<p class='small'>No separate groups yet.</p>";
+        return;
+    }
+
+    const ref = db.collection("games")
+        .doc(currentAdminGameDate)
+        .collection("players");
+
+    unsubscribePlayers = ref.onSnapshot(
+        snapshot => {
+            const participants = snapshot.docs.filter(doc => doc.data().participated === true);
+
+            if(!participants.length){
+                container.innerHTML = "<p class='small'>ഈ Game-ൽ ഇതുവരെ ആരും Pick Submit ചെയ്തിട്ടില്ല.</p>";
+                updateSelectedPlayerCount();
+                loadAdminRooms();
+                return;
+            }
+
+            let html = "";
+
+            participants.forEach(doc => {
+                const data = doc.data();
+                const uid = doc.id;
+
+                html += `
+                    <div class="admin-player admin-player-select">
+                        <input
+                            class="admin-player-check player-select-checkbox"
+                            type="checkbox"
+                            data-uid="${escapeHtml(uid)}"
+                            onchange="updateSelectedPlayerCount()"
+                        >
+                        <div class="admin-player-content">
+                            <strong>👤 ${escapeHtml(data.name || "-")}</strong>
+                            <div class="small">📱 ${escapeHtml(data.phone || "-")}</div>
+                            <hr>
+                            <div>🔢 Number: <strong>${data.number !== undefined ? escapeHtml(data.number) : "-"}</strong></div>
+                            <div>💰 Buy: <strong>${data.buy !== undefined ? "₹" + escapeHtml(data.buy) : "-"}</strong></div>
+                            <div>💵 Price: <strong>${data.price !== undefined ? "₹" + escapeHtml(data.price) : "-"}</strong></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateSelectedPlayerCount();
+            loadAdminRooms();
+        },
+        error => {
+            console.error("PLAYERS ERROR:", error);
+            container.innerHTML = "<p>Players load ചെയ്യാൻ കഴിഞ്ഞില്ല.</p>";
+        }
+    );
+}
+
+function updateSelectedPlayerCount(){
+    const count = document.querySelectorAll(".player-select-checkbox:checked").length;
+    const el = document.getElementById("selectedPlayerCount");
+    if(el){
+        el.textContent = count + " Player" + (count === 1 ? "" : "s") + " selected";
+    }
+}
+
+function separateSelectedPlayers(){
+    const checkboxes = Array.from(document.querySelectorAll(".player-select-checkbox:checked"));
+
+    if(!checkboxes.length){
+        showMessage("ആദ്യം Players tick ചെയ്യുക.");
+        return;
+    }
+
+    const modal = document.getElementById("roomNameModal");
+    const input = document.getElementById("roomNameInput");
+
+    input.value = "";
+    modal.classList.remove("hidden");
+    setTimeout(() => input.focus(), 100);
+}
+
+function closeRoomNameModal(){
+    document.getElementById("roomNameModal").classList.add("hidden");
+}
+
+async function confirmSeparateSelectedPlayers(){
+
+    const checkboxes = Array.from(document.querySelectorAll(".player-select-checkbox:checked"));
+    const input = document.getElementById("roomNameInput");
+    const cleanRoomName = input.value.trim();
+
+    if(!checkboxes.length){
+        closeRoomNameModal();
+        showMessage("ആദ്യം Players tick ചെയ്യുക.");
+        return;
+    }
+
+    if(!cleanRoomName){
+        showMessage("Room name നൽകുക.");
+        input.focus();
+        return;
+    }
+
+    if(!currentAdminGameDate){
+        closeRoomNameModal();
+        showMessage("Game create ചെയ്തിട്ടില്ല.");
+        return;
+    }
+
+    try{
+        const playerDocs = [];
+
+        for(const checkbox of checkboxes){
+            const uid = checkbox.dataset.uid;
+            const snap = await db.collection("games")
+                .doc(currentAdminGameDate)
+                .collection("players")
+                .doc(uid)
+                .get();
+
+            /* Only real participants can be placed in a room. */
+            if(snap.exists && snap.data().participated === true){
+                playerDocs.push({uid: uid, data: snap.data()});
+            }
+        }
+
+        if(!playerDocs.length){
+            closeRoomNameModal();
+            showMessage("Selected players-ൽ submitted Pick ഉള്ളവർ ഇല്ല.");
+            return;
+        }
+
+        const roomRef = db.collection("games")
+            .doc(currentAdminGameDate)
+            .collection("adminRooms")
+            .doc();
+
+        const batch = db.batch();
+
+        batch.set(roomRef, {
+            roomName: cleanRoomName,
+            gameDate: currentAdminGameDate,
+            createdBy: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            memberCount: playerDocs.length
+        });
+
+        playerDocs.forEach(player => {
+            const memberRef = roomRef.collection("members").doc(player.uid);
+            const data = player.data;
+
+            batch.set(memberRef, {
+                uid: player.uid,
+                name: data.name || "-",
+                phone: data.phone || "-",
+                number: data.number !== undefined ? data.number : null,
+                buy: data.buy !== undefined ? data.buy : null,
+                price: data.price !== undefined ? data.price : null,
+                addedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        await batch.commit();
+
+        checkboxes.forEach(cb => cb.checked = false);
+        updateSelectedPlayerCount();
+        closeRoomNameModal();
+        loadAdminRooms();
+
+        showMessage(
+            playerDocs.length + " players " + cleanRoomName + " എന്ന Admin-only group-ലേക്ക് മാറ്റി.",
+            true
+        );
+
+    }catch(error){
+        console.error("SEPARATE PLAYERS ERROR:", error);
+        showMessage("Players separate ചെയ്യാൻ കഴിഞ്ഞില്ല: " + (error.message || error.code || "Unknown error"));
+    }
+}
+
+function loadAdminRooms(){
+
+    const container = document.getElementById("adminRoomsList");
+
+    if(!container || !currentAdminGameDate){
+        if(container){
+            container.innerHTML = "<p class='small'>No separate groups yet.</p>";
+        }
+        return;
+    }
+
+    db.collection("games")
+        .doc(currentAdminGameDate)
+        .collection("adminRooms")
+        .get()
+        .then(async snapshot => {
+
+            if(snapshot.empty){
+                container.innerHTML = "<p class='small'>No separate groups yet.</p>";
+                return;
+            }
+
+            const rooms = snapshot.docs.sort((a,b) => {
+                const at = a.data().createdAt && a.data().createdAt.toMillis ? a.data().createdAt.toMillis() : 0;
+                const bt = b.data().createdAt && b.data().createdAt.toMillis ? b.data().createdAt.toMillis() : 0;
+                return bt - at;
+            });
+
+            let html = "";
+
+            for(const roomDoc of rooms){
+                const room = roomDoc.data();
+                const membersSnap = await roomDoc.ref.collection("members").get();
+                let membersHtml = "";
+
+                membersSnap.forEach(memberDoc => {
+                    const member = memberDoc.data();
+                    membersHtml += `
+                        <div class="admin-room-member">
+                            👤 <strong>${escapeHtml(member.name || "-")}</strong>
+                            <div class="small">
+                                📱 ${escapeHtml(member.phone || "-")} &nbsp; • &nbsp;
+                                🔢 ${member.number !== null && member.number !== undefined ? escapeHtml(member.number) : "-"}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="admin-room">
+                        <strong>🏠 ${escapeHtml(room.roomName || "Private Room")}</strong>
+                        <div class="small">${membersSnap.size} player${membersSnap.size === 1 ? "" : "s"}</div>
+                        ${membersHtml}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+        })
+        .catch(error => {
+            console.error("ADMIN ROOMS ERROR:", error);
+            container.innerHTML = "<p class='small'>Separate groups load ചെയ്യാൻ കഴിഞ്ഞില്ല.</p>";
+        });
+}
+
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value){
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
+   ADMIN LOGOUT
+========================================================= */
+
+async function adminLogout(){
+
+    try{
+
+        if(unsubscribePlayers){
+
+            unsubscribePlayers();
+
+            unsubscribePlayers =
+                null;
+
+        }
+
+
+        await auth.signOut();
+
+        currentUser =
+            null;
+
+        currentAdminGameDate = null;
+
+        hideAllScreens();
+
+        document
+            .getElementById("loginScreen")
+            .classList.remove("hidden");
+
+    }
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+/* =========================================================
+   WHATSAPP
+========================================================= */
+
+
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+function launchConfetti(){
+
+    for(
+        let i = 0;
+        i < 70;
+        i++
+    ){
+
+        const piece =
+            document.createElement("div");
+
+
+        piece.className =
+            "confetti";
+
+
+        piece.style.left =
+            Math.random() * 100 + "vw";
+
+
+        piece.style.animationDelay =
+            Math.random() * 1.5 + "s";
+
+
+        piece.style.transform =
+            "rotate(" +
+            Math.random() * 360 +
+            "deg)";
+
+
+        document
+            .body
+            .appendChild(piece);
+
+
+        setTimeout(() => {
+
+            piece.remove();
+
+        }, 3500);
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTO LOGIN / SESSION
+========================================================= */
+
+auth.onAuthStateChanged(
+    async (user) => {
+
+        if(!user){
+
+            hideAllScreens();
+
+            document
+                .getElementById("loginScreen")
+                .classList.remove("hidden");
+
+            return;
+        }
+
+
+        currentUser =
+            user;
+
+
+        /* ADMIN */
+
+        if(
+            !user.isAnonymous
+            &&
+            user.email
+            &&
+            user.email.toLowerCase()
+                === ADMIN_EMAIL.toLowerCase()
+        ){
+
+            hideAllScreens();
+
+            document
+                .getElementById("adminDashboard")
+                .classList.remove("hidden");
+
+
+            loadAdminGame();
+
+            return;
+        }
+
+
+        /* PLAYER */
+
+        if(user.isAnonymous){
+
+            const savedName =
+                localStorage.getItem(
+                    "dreamPickName"
+                );
+
+
+            if(savedName){
+
+                hideAllScreens();
+
+                document
+                    .getElementById("playerHome")
+                    .classList.remove("hidden");
+
+
+                document
+                    .getElementById("playerName")
+                    .textContent =
+                    savedName;
+
+
+                loadPlayerGame();
+
+            }
+            else{
+
+                hideAllScreens();
+
+                document
+                    .getElementById("loginScreen")
+                    .classList.remove("hidden");
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
