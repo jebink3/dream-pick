@@ -946,6 +946,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
 const db = firebase.firestore();
 
@@ -1139,6 +1140,12 @@ async function playerLogin(){
     }
 
     try{
+        /* Never reuse the Admin account for a Player login.
+           Players always use an anonymous Firebase account. */
+        if(auth.currentUser && !auth.currentUser.isAnonymous){
+            await auth.signOut();
+        }
+
         await firebaseLogin();
 
         const game = await getNextGame();
@@ -1181,21 +1188,18 @@ async function playerLogin(){
 
 async function firebaseLogin(){
 
-    if(auth.currentUser){
-
-        currentUser =
-            auth.currentUser;
-
+    /* Keep the existing anonymous account whenever possible.
+       Firebase documents that signInAnonymously returns the existing
+       anonymous user if one is already signed in. */
+    if(auth.currentUser && auth.currentUser.isAnonymous){
+        currentUser = auth.currentUser;
+        localStorage.setItem("dreamPickAnonUid", currentUser.uid);
         return currentUser;
     }
 
-
-    const result =
-        await auth.signInAnonymously();
-
-    currentUser =
-        result.user;
-
+    const result = await auth.signInAnonymously();
+    currentUser = result.user;
+    localStorage.setItem("dreamPickAnonUid", currentUser.uid);
     return currentUser;
 
 }
@@ -1312,48 +1316,74 @@ async function loadPlayerGame(){
 
 async function loadMyPick(){
 
-    if(!currentUser || !currentPlayerGameDate){
+    const emptyPick = () => {
         document.getElementById("myNumber").textContent = "-";
         document.getElementById("myBuy").textContent = "-";
         document.getElementById("myPrice").textContent = "-";
+    };
+
+    if(!currentUser || !currentPlayerGameDate){
+        emptyPick();
         return;
     }
 
     const gameId = currentPlayerGameId || currentPlayerGameDate;
-
-    const ref = db.collection("games")
-        .doc(gameId)
-        .collection("players")
-        .doc(currentUser.uid);
+    const playersRef = db.collection("games").doc(gameId).collection("players");
 
     try{
+        /* First: normal Firebase UID record. */
+        const ref = playersRef.doc(currentUser.uid);
         const doc = await ref.get();
 
-        if(!doc.exists){
-            document.getElementById("myNumber").textContent = "-";
-            document.getElementById("myBuy").textContent = "-";
-            document.getElementById("myPrice").textContent = "-";
-            return;
+        let data = doc.exists ? doc.data() : null;
+
+        /* Second: same-device backup. This protects the player's display
+           if the anonymous Firebase UID changed after an account switch.
+           It does not expose another player's Firestore document. */
+        if(!data || data.number === undefined || data.number === null){
+            const backupRaw = localStorage.getItem("dreamPickLastPick");
+            if(backupRaw){
+                try{
+                    const backup = JSON.parse(backupRaw);
+                    const phone = localStorage.getItem("dreamPickPhone") || "";
+                    if(backup.gameId === gameId && backup.phone === phone &&
+                       backup.number !== undefined && backup.number !== null){
+                        data = backup;
+
+                        /* Copy the recovered pick to the current anonymous UID. */
+                        await ref.set({
+                            name: backup.name || localStorage.getItem("dreamPickName") || "",
+                            phone: backup.phone || phone,
+                            number: backup.number,
+                            buy: backup.buy,
+                            price: backup.price,
+                            participated: true,
+                            gameId: gameId,
+                            gameDate: currentPlayerGameDate,
+                            recoveredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge:true });
+                    }
+                }catch(e){
+                    console.warn("PICK BACKUP READ ERROR:", e);
+                }
+            }
         }
 
-        const data = doc.data();
-
-        if(data.number !== undefined && data.number !== null){
+        if(data && data.number !== undefined && data.number !== null){
             document.getElementById("myNumber").textContent = data.number;
             document.getElementById("myBuy").textContent = "₹" + data.buy;
             document.getElementById("myPrice").textContent = "₹" + data.price;
             document.getElementById("pickArea").classList.add("hidden");
         }else{
-            document.getElementById("myNumber").textContent = "-";
-            document.getElementById("myBuy").textContent = "-";
-            document.getElementById("myPrice").textContent = "-";
+            emptyPick();
         }
 
     }catch(error){
         console.error("MY PICK ERROR:", error);
+        emptyPick();
     }
 }
-
 
 
 /* =========================================================
@@ -1473,6 +1503,17 @@ async function submitPick(){
                 submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge:true });
+
+        /* Same-device recovery copy. Firestore remains the source of truth. */
+        localStorage.setItem("dreamPickLastPick", JSON.stringify({
+            gameId: gameId,
+            gameDate: currentPlayerGameDate,
+            name: document.getElementById("playerName").textContent,
+            phone: localStorage.getItem("dreamPickPhone") || "",
+            number: selectedNumber,
+            buy: buy,
+            price: price
+        }));
 
         document.getElementById("myNumber").textContent = selectedNumber;
         document.getElementById("myBuy").textContent = "₹" + buy;
