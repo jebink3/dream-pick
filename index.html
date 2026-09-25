@@ -349,6 +349,73 @@ hr{
 
 
 /* =========================================================
+   RESULT CELEBRATION POPUP
+========================================================= */
+.result-popup-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(17,24,39,.72);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10000;
+}
+.result-popup{
+    width:100%;
+    max-width:390px;
+    background:#fff;
+    border-radius:24px;
+    padding:28px 20px 20px;
+    text-align:center;
+    box-shadow:0 24px 70px rgba(0,0,0,.3);
+    animation:popupIn .35s ease-out;
+}
+.result-popup.winner{
+    border:3px solid #fbbf24;
+    background:linear-gradient(180deg,#fff7ed,#ffffff);
+}
+.result-popup.nonwinner{
+    border:3px solid #e5e7eb;
+}
+.result-popup-icon{
+    font-size:58px;
+    line-height:1;
+    margin-bottom:10px;
+}
+.result-popup-title{
+    font-size:27px;
+    font-weight:900;
+    margin-bottom:12px;
+}
+.result-popup-number{
+    font-size:48px;
+    font-weight:900;
+    color:#4f46e5;
+    margin:8px 0;
+}
+.result-popup-price{
+    margin:15px 0;
+    padding:14px;
+    border-radius:14px;
+    background:#eef2ff;
+}
+.result-popup-price strong{
+    display:block;
+    font-size:27px;
+    color:#4f46e5;
+    margin-top:5px;
+}
+.result-popup-close{
+    background:#111827;
+    color:#fff;
+}
+@keyframes popupIn{
+    from{transform:scale(.88);opacity:0}
+    to{transform:scale(1);opacity:1}
+}
+
+/* =========================================================
    ROOM NAME MODAL
 ========================================================= */
 .room-modal-overlay{
@@ -719,6 +786,7 @@ hr{
             <input
                 id="adminDrawTime"
                 type="time"
+                value="14:30"
             >
 
             <button class="primary" onclick="saveLotteryDetails()">
@@ -813,6 +881,21 @@ hr{
 
 
 
+<!-- RESULT CELEBRATION POPUP -->
+<div id="resultPopup" class="result-popup-overlay hidden">
+    <div id="resultPopupCard" class="result-popup">
+        <div id="resultPopupIcon" class="result-popup-icon">🎉</div>
+        <div id="resultPopupTitle" class="result-popup-title">CONGRATULATIONS!</div>
+        <div id="resultPopupText" class="small"></div>
+        <div class="result-popup-number" id="popupWinningNumber">-</div>
+        <div class="result-popup-price">
+            <div>💰 Price Value</div>
+            <strong id="popupWinningPrice">₹0</strong>
+        </div>
+        <button class="result-popup-close" onclick="closeResultPopup()">OK</button>
+    </div>
+</div>
+
 <!-- PRIVATE ROOM NAME MODAL -->
 <div id="roomNameModal" class="room-modal-overlay hidden">
     <div class="room-modal">
@@ -882,6 +965,7 @@ let unsubscribePlayers = null;
 let lastPublishedResultAt = null;
 
 let currentPlayerGameDate = null;
+let currentPlayerGameId = null;
 let currentAdminGameDate = null;
 
 const ADMIN_EMAIL =
@@ -978,7 +1062,7 @@ function isPickOpenForDate(drawDate){
     const hour = Number(parts[0]);
     const minute = Number(parts[1]);
 
-    return (hour * 60 + minute) < (14 * 60);
+    return (hour * 60 + minute) < (14 * 60 + 30);
 }
 
 function isPickOpen(){
@@ -1065,6 +1149,8 @@ async function playerLogin(){
         }
 
         currentPlayerGameDate = game.date;
+        currentPlayerGameId = game.ref.id;
+        localStorage.setItem("dreamPickGameId", currentPlayerGameId);
 
         await game.ref.collection("players").doc(currentUser.uid).set({
             name: name,
@@ -1131,6 +1217,8 @@ async function loadPlayerGame(){
 
         if(!game){
             currentPlayerGameDate = null;
+            currentPlayerGameId = null;
+            localStorage.removeItem("dreamPickGameId");
             document.getElementById("lotteryName").textContent = "-";
             document.getElementById("drawDate").textContent = "-";
             document.getElementById("drawTime").textContent = "-";
@@ -1144,6 +1232,8 @@ async function loadPlayerGame(){
         }
 
         currentPlayerGameDate = game.date;
+        currentPlayerGameId = game.ref.id;
+        localStorage.setItem("dreamPickGameId", currentPlayerGameId);
         const gameRef = game.ref;
 
         unsubscribeGame = gameRef.onSnapshot(async (doc) => {
@@ -1151,6 +1241,7 @@ async function loadPlayerGame(){
             const data = doc.exists ? doc.data() : {};
             const drawDate = data.drawDate || currentPlayerGameDate;
             currentPlayerGameDate = drawDate;
+            currentPlayerGameId = gameRef.id;
 
             document.getElementById("lotteryName").textContent = data.lotteryName || "-";
             document.getElementById("drawDate").textContent = drawDate || "-";
@@ -1173,13 +1264,13 @@ async function loadPlayerGame(){
                 resultStatus.textContent = "🎉 Result Published";
                 resultStatus.style.color = "#15803d";
 
-                let resultTime = "";
-                if(data.resultPublishedAt){
-                    resultTime = data.resultPublishedAt.toMillis ? String(data.resultPublishedAt.toMillis()) : "";
-                }
+                const resultTime = data.resultPublishedAt && data.resultPublishedAt.toMillis
+                    ? String(data.resultPublishedAt.toMillis())
+                    : String(data.result);
+
                 if(resultTime && resultTime !== lastPublishedResultAt){
                     lastPublishedResultAt = resultTime;
-                    launchConfetti();
+                    await showPersonalResultPopup(data.result, currentPlayerGameId);
                 }
             }else{
                 resultNumber.textContent = "-";
@@ -1228,8 +1319,10 @@ async function loadMyPick(){
         return;
     }
 
+    const gameId = currentPlayerGameId || currentPlayerGameDate;
+
     const ref = db.collection("games")
-        .doc(currentPlayerGameDate)
+        .doc(gameId)
         .collection("players")
         .doc(currentUser.uid);
 
@@ -1272,7 +1365,7 @@ function selectNumber(number){
     if(!isPickOpenForDate(currentPlayerGameDate)){
 
         showMessage(
-            "2 മണിക്ക് ശേഷം Pick ചെയ്യാൻ കഴിയില്ല."
+            "2:30 PM കഴിഞ്ഞാൽ Pick ചെയ്യാൻ കഴിയില്ല."
         );
 
         return;
@@ -1343,7 +1436,7 @@ function calculatePrice(){
 async function submitPick(){
 
     if(!currentPlayerGameDate || !isPickOpenForDate(currentPlayerGameDate)){
-        showMessage("2 മണിക്ക് ശേഷം Pick ചെയ്യാൻ കഴിയില്ല.");
+        showMessage("2:30 PM കഴിഞ്ഞാൽ Pick ചെയ്യാൻ കഴിയില്ല.");
         return;
     }
 
@@ -1362,8 +1455,10 @@ async function submitPick(){
     const price = buy * 2;
 
     try{
+        const gameId = currentPlayerGameId || currentPlayerGameDate;
+
         await db.collection("games")
-            .doc(currentPlayerGameDate)
+            .doc(gameId)
             .collection("players")
             .doc(currentUser.uid)
             .set({
@@ -1373,6 +1468,8 @@ async function submitPick(){
                 buy: buy,
                 price: price,
                 participated: true,
+                gameId: gameId,
+                gameDate: currentPlayerGameDate,
                 submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge:true });
@@ -1419,6 +1516,7 @@ async function playerLogout(){
             null;
 
         currentPlayerGameDate = null;
+        currentPlayerGameId = null;
 
         lastPublishedResultAt =
             null;
@@ -1557,7 +1655,7 @@ async function loadAdminGame(){
             currentAdminGameDate = null;
             document.getElementById("adminDrawDate").value = getIndiaDate();
             document.getElementById("adminLotteryName").value = "";
-            document.getElementById("adminDrawTime").value = "";
+            document.getElementById("adminDrawTime").value = "14:30";
             document.getElementById("adminResultStatus").textContent = "Game ഇതുവരെ create ചെയ്തിട്ടില്ല.";
             loadPlayers();
             return;
@@ -1568,7 +1666,7 @@ async function loadAdminGame(){
 
         document.getElementById("adminLotteryName").value = data.lotteryName || "";
         document.getElementById("adminDrawDate").value = data.drawDate || game.date;
-        document.getElementById("adminDrawTime").value = data.drawTime || "";
+        document.getElementById("adminDrawTime").value = data.drawTime || "14:30";
 
         if(data.resultPublished === true && data.result !== undefined){
             document.getElementById("adminResultStatus").textContent = "Current Result: " + data.result;
@@ -2099,6 +2197,55 @@ async function adminLogout(){
 
 
 /* =========================================================
+   PERSONAL RESULT POPUP
+========================================================= */
+async function showPersonalResultPopup(winningNumber, gameId){
+    if(!currentUser || !gameId) return;
+
+    try{
+        const ref = db.collection("games")
+            .doc(gameId)
+            .collection("players")
+            .doc(currentUser.uid);
+        const snap = await ref.get();
+
+        if(!snap.exists) return;
+        const pick = snap.data() || {};
+        if(pick.number === undefined || pick.number === null) return;
+
+        const publishedKey = "dreamPickResultPopup_" + gameId + "_" + String(winningNumber);
+        if(localStorage.getItem(publishedKey) === "shown") return;
+        localStorage.setItem(publishedKey, "shown");
+
+        const isWinner = Number(pick.number) === Number(winningNumber);
+        const card = document.getElementById("resultPopupCard");
+        const icon = document.getElementById("resultPopupIcon");
+        const title = document.getElementById("resultPopupTitle");
+        const text = document.getElementById("resultPopupText");
+        const number = document.getElementById("popupWinningNumber");
+        const price = document.getElementById("popupWinningPrice");
+
+        card.className = "result-popup " + (isWinner ? "winner" : "nonwinner");
+        icon.textContent = isWinner ? "🎉" : "😔";
+        title.textContent = isWinner ? "CONGRATULATIONS!" : "RESULT PUBLISHED";
+        text.innerHTML = isWinner
+            ? "നിങ്ങളുടെ Pick <strong>" + escapeHtml(pick.number) + "</strong> Winning Number-ുമായി match ആയി!"
+            : "നിങ്ങളുടെ Pick <strong>" + escapeHtml(pick.number) + "</strong> ആണ്. Winning Number <strong>" + escapeHtml(winningNumber) + "</strong> ആണ്.";
+        number.textContent = winningNumber;
+        price.textContent = "₹" + (pick.price !== undefined && pick.price !== null ? pick.price : 0);
+
+        document.getElementById("resultPopup").classList.remove("hidden");
+        if(isWinner) launchConfetti();
+    }catch(error){
+        console.error("RESULT POPUP ERROR:", error);
+    }
+}
+
+function closeResultPopup(){
+    document.getElementById("resultPopup").classList.add("hidden");
+}
+
+/* =========================================================
    CONFETTI
 ========================================================= */
 
@@ -2198,6 +2345,8 @@ auth.onAuthStateChanged(
         /* PLAYER */
 
         if(user.isAnonymous){
+
+            currentPlayerGameId = localStorage.getItem("dreamPickGameId") || null;
 
             const savedName =
                 localStorage.getItem(
